@@ -622,6 +622,14 @@
         type: [String, Array, Object],
         default: null
       },
+      wrapperTag: {
+        type: String,
+        default: 'div'
+      },
+      wrapperClass: {
+        type: [String, Array, Object],
+        default: null
+      },
       poolSize: {
         type: [Number, String],
         default: 2000
@@ -877,6 +885,11 @@
       staticClass: "items",
       class: _vm.contentClass,
       style: _vm.itemsStyle
+    }, [_c(_vm.wrapperTag, {
+      ref: "items",
+      tag: "component",
+      staticClass: "wrapper",
+      class: _vm.wrapperClass
     }, [_vm.renderers ? _vm._l(_vm.visibleItems, function (item, index) {
       return _c(_vm.renderers[item[_vm.typeField]], {
         key: _vm.keysEnabled && item[_vm.keyField] || undefined,
@@ -893,7 +906,7 @@
         itemIndex: _vm.$_startIndex + index,
         itemKey: _vm.keysEnabled && item[_vm.keyField] || undefined
       });
-    })]], 2), _vm._v(" "), _vm._t("after-content")], 2), _vm._v(" "), _vm._t("after-container"), _vm._v(" "), _c("resize-observer", { on: { notify: _vm.handleResize } })], 2);
+    })]], 2)], 1), _vm._v(" "), _vm._t("after-content")], 2), _vm._v(" "), _vm._t("after-container"), _vm._v(" "), _c("resize-observer", { on: { notify: _vm.handleResize } })], 2);
   };
   var __vue_staticRenderFns__ = [];
   __vue_render__._withStripped = true;
@@ -902,10 +915,10 @@
   /* style */
   var __vue_inject_styles__ = function (inject) {
     if (!inject) return;
-    inject("data-v-caa2d078_0", { source: "\n.virtual-scroller[data-v-caa2d078]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-caa2d078] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-caa2d078] {\n  width: 100%;\n}\n", map: undefined, media: undefined });
+    inject("data-v-c56f4132_0", { source: "\n.virtual-scroller[data-v-c56f4132]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-c56f4132] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-c56f4132] {\n  width: 100%;\n}\n", map: undefined, media: undefined });
   };
   /* scoped */
-  var __vue_scope_id__ = "data-v-caa2d078";
+  var __vue_scope_id__ = "data-v-c56f4132";
   /* module identifier */
   var __vue_module_identifier__ = undefined;
   /* functional template */
@@ -915,7 +928,7 @@
     var component = (typeof script$$1 === 'function' ? script$$1.options : script$$1) || {};
 
     {
-      component.__file = "/home/akryum/Projets/vue-virtual-scroller/src/components/VirtualScroller.vue";
+      component.__file = 'C:\\Users\\Dani\\Code\\Clarity\\vue-virtual-scroller\\src\\components\\VirtualScroller.vue';
     }
 
     if (!component.render) {
@@ -1383,10 +1396,10 @@
   /* style */
   var __vue_inject_styles__$1 = function (inject) {
     if (!inject) return;
-    inject("data-v-0ff19954_0", { source: "\n.recycle-list[data-v-0ff19954]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-wrapper[data-v-0ff19954] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n  position: relative;\n}\n.item-view[data-v-0ff19954] {\n  width: 100%;\n  position: absolute;\n  top: 0;\n  left: 0;\n  will-change: transform;\n}\n", map: undefined, media: undefined });
+    inject("data-v-42526b74_0", { source: "\n.recycle-list[data-v-42526b74]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-wrapper[data-v-42526b74] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n  position: relative;\n}\n.item-view[data-v-42526b74] {\n  width: 100%;\n  position: absolute;\n  top: 0;\n  left: 0;\n  will-change: transform;\n}\n", map: undefined, media: undefined });
   };
   /* scoped */
-  var __vue_scope_id__$1 = "data-v-0ff19954";
+  var __vue_scope_id__$1 = "data-v-42526b74";
   /* module identifier */
   var __vue_module_identifier__$1 = undefined;
   /* functional template */
@@ -1396,7 +1409,7 @@
     var component = (typeof script === 'function' ? script.options : script) || {};
 
     {
-      component.__file = "/home/akryum/Projets/vue-virtual-scroller/src/components/RecycleList.vue";
+      component.__file = 'C:\\Users\\Dani\\Code\\Clarity\\vue-virtual-scroller\\src\\components\\RecycleList.vue';
     }
 
     if (!component.render) {

@@ -26,25 +26,32 @@
         :style="itemsStyle"
         class="items"
       >
-        <template v-if="renderers">
-          <component
-            v-for="(item, index) in visibleItems"
-            :key="keysEnabled && item[keyField] || undefined"
-            :is="renderers[item[typeField]]"
-            :item="item"
-            :item-index="$_startIndex + index"
-            class="item"
-          />
-        </template>
-        <template v-else>
-          <slot
-            v-for="(item, index) in visibleItems"
-            :item="item"
-            :item-index="$_startIndex + index"
-            :item-key="keysEnabled && item[keyField] || undefined"
-            class="item"
-          />
-        </template>
+        <component
+          ref="items"
+          :is="wrapperTag"
+          :class="wrapperClass"
+          class="wrapper"
+        >
+          <template v-if="renderers">
+            <component
+              v-for="(item, index) in visibleItems"
+              :key="keysEnabled && item[keyField] || undefined"
+              :is="renderers[item[typeField]]"
+              :item="item"
+              :item-index="$_startIndex + index"
+              class="item"
+            />
+          </template>
+          <template v-else>
+            <slot
+              v-for="(item, index) in visibleItems"
+              :item="item"
+              :item-index="$_startIndex + index"
+              :item-key="keysEnabled && item[keyField] || undefined"
+              class="item"
+            />
+          </template>
+        </component>
       </component>
       <slot
         name="after-content"
@@ -94,6 +101,14 @@ export default {
       default: 'div',
     },
     contentClass: {
+      type: [String, Array, Object],
+      default: null,
+    },
+    wrapperTag: {
+      type: String,
+      default: 'div',
+    },
+    wrapperClass: {
       type: [String, Array, Object],
       default: null,
     },
