@@ -598,9 +598,11 @@
         type: Object,
         default: null
       },
-      keyField: {
-        type: String,
-        default: 'id'
+      getKey: {
+        type: Function,
+        default: function _default(item) {
+          return item.id;
+        }
       },
       mainTag: {
         type: String,
@@ -892,7 +894,7 @@
       class: _vm.wrapperClass
     }, [_vm.renderers ? _vm._l(_vm.visibleItems, function (item, index) {
       return _c(_vm.renderers[item[_vm.typeField]], {
-        key: _vm.keysEnabled && item[_vm.keyField] || undefined,
+        key: _vm.keysEnabled && _vm.getKey(item) || undefined,
         tag: "component",
         staticClass: "item",
         attrs: {
@@ -904,7 +906,7 @@
       return _vm._t("default", null, {
         item: item,
         itemIndex: _vm.$_startIndex + index,
-        itemKey: _vm.keysEnabled && item[_vm.keyField] || undefined
+        itemKey: _vm.keysEnabled && _vm.getKey(item) || undefined
       });
     })]], 2)], 1), _vm._v(" "), _vm._t("after-content")], 2), _vm._v(" "), _vm._t("after-container"), _vm._v(" "), _c("resize-observer", { on: { notify: _vm.handleResize } })], 2);
   };
@@ -915,10 +917,10 @@
   /* style */
   var __vue_inject_styles__ = function (inject) {
     if (!inject) return;
-    inject("data-v-c56f4132_0", { source: "\n.virtual-scroller[data-v-c56f4132]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-c56f4132] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-c56f4132] {\n  width: 100%;\n}\n", map: undefined, media: undefined });
+    inject("data-v-98277cdc_0", { source: "\n.virtual-scroller[data-v-98277cdc]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-98277cdc] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-98277cdc] {\n  width: 100%;\n}\n", map: undefined, media: undefined });
   };
   /* scoped */
-  var __vue_scope_id__ = "data-v-c56f4132";
+  var __vue_scope_id__ = "data-v-98277cdc";
   /* module identifier */
   var __vue_module_identifier__ = undefined;
   /* functional template */

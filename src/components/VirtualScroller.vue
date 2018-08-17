@@ -35,7 +35,7 @@
           <template v-if="renderers">
             <component
               v-for="(item, index) in visibleItems"
-              :key="keysEnabled && item[keyField] || undefined"
+              :key="keysEnabled && getKey(item) || undefined"
               :is="renderers[item[typeField]]"
               :item="item"
               :item-index="$_startIndex + index"
@@ -47,7 +47,7 @@
               v-for="(item, index) in visibleItems"
               :item="item"
               :item-index="$_startIndex + index"
-              :item-key="keysEnabled && item[keyField] || undefined"
+              :item-key="keysEnabled && getKey(item) || undefined"
               class="item"
             />
           </template>
@@ -80,9 +80,9 @@ export default {
       type: Object,
       default: null,
     },
-    keyField: {
-      type: String,
-      default: 'id',
+    getKey: {
+      type: Function,
+      default: (item) => { return item.id },
     },
     mainTag: {
       type: String,
