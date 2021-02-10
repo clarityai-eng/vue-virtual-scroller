@@ -43,19 +43,21 @@ var ResizeObserver = { render: function render() {
 	name: 'resize-observer',
 
 	methods: {
-		notify: function notify() {
-			this.$emit('notify');
+		compareAndNotify: function compareAndNotify() {
+			if (this._w !== this.$el.offsetWidth || this._h !== this.$el.offsetHeight) {
+				this._w = this.$el.offsetWidth;
+				this._h = this.$el.offsetHeight;
+				this.$emit('notify');
+			}
 		},
 		addResizeHandlers: function addResizeHandlers() {
-			this._resizeObject.contentDocument.defaultView.addEventListener('resize', this.notify);
-			if (this._w !== this.$el.offsetWidth || this._h !== this.$el.offsetHeight) {
-				this.notify();
-			}
+			this._resizeObject.contentDocument.defaultView.addEventListener('resize', this.compareAndNotify);
+			this.compareAndNotify();
 		},
 		removeResizeHandlers: function removeResizeHandlers() {
 			if (this._resizeObject && this._resizeObject.onload) {
 				if (!isIE && this._resizeObject.contentDocument) {
-					this._resizeObject.contentDocument.defaultView.removeEventListener('resize', this.notify);
+					this._resizeObject.contentDocument.defaultView.removeEventListener('resize', this.compareAndNotify);
 				}
 				delete this._resizeObject.onload;
 			}
@@ -72,7 +74,6 @@ var ResizeObserver = { render: function render() {
 		});
 		var object = document.createElement('object');
 		this._resizeObject = object;
-		object.setAttribute('style', 'display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: none; z-index: -1;');
 		object.setAttribute('aria-hidden', 'true');
 		object.setAttribute('tabindex', -1);
 		object.onload = this.addResizeHandlers;
@@ -93,16 +94,13 @@ var ResizeObserver = { render: function render() {
 // Install the components
 function install(Vue) {
 	Vue.component('resize-observer', ResizeObserver);
-	/* -- Add more components here -- */
+	Vue.component('ResizeObserver', ResizeObserver);
 }
-
-/* -- Plugin definition & Auto-install -- */
-/* You shouldn't have to modify the code below */
 
 // Plugin
 var plugin = {
 	// eslint-disable-next-line no-undef
-	version: "0.4.4",
+	version: "0.4.5",
 	install: install
 };
 
@@ -117,236 +115,307 @@ if (GlobalVue) {
 	GlobalVue.use(plugin);
 }
 
-var classCallCheck = function (instance, Constructor) {
+function _typeof(obj) {
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
   }
-};
+}
 
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
   }
+}
 
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
 
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var toConsumableArray = function (arr) {
+function _arrayWithoutHoles(arr) {
   if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
 
     return arr2;
-  } else {
-    return Array.from(arr);
   }
-};
+}
+
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
 
 function processOptions(value) {
-	var options = void 0;
-	if (typeof value === 'function') {
-		// Simple options (callback-only)
-		options = {
-			callback: value
-		};
-	} else {
-		// Options object
-		options = value;
-	}
-	return options;
-}
+  var options;
 
+  if (typeof value === 'function') {
+    // Simple options (callback-only)
+    options = {
+      callback: value
+    };
+  } else {
+    // Options object
+    options = value;
+  }
+
+  return options;
+}
 function throttle(callback, delay) {
-	var timeout = void 0;
-	var lastState = void 0;
-	var currentArgs = void 0;
-	var throttled = function throttled(state) {
-		for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-			args[_key - 1] = arguments[_key];
-		}
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var timeout;
+  var lastState;
+  var currentArgs;
 
-		currentArgs = args;
-		if (timeout && state === lastState) return;
-		lastState = state;
-		clearTimeout(timeout);
-		timeout = setTimeout(function () {
-			callback.apply(undefined, [state].concat(toConsumableArray(currentArgs)));
-			timeout = 0;
-		}, delay);
-	};
-	throttled._clear = function () {
-		clearTimeout(timeout);
-	};
-	return throttled;
+  var throttled = function throttled(state) {
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    currentArgs = args;
+    if (timeout && state === lastState) return;
+    var leading = options.leading;
+
+    if (typeof leading === 'function') {
+      leading = leading(state, lastState);
+    }
+
+    if ((!timeout || state !== lastState) && leading) {
+      callback.apply(void 0, [state].concat(_toConsumableArray(currentArgs)));
+    }
+
+    lastState = state;
+    clearTimeout(timeout);
+    timeout = setTimeout(function () {
+      callback.apply(void 0, [state].concat(_toConsumableArray(currentArgs)));
+      timeout = 0;
+    }, delay);
+  };
+
+  throttled._clear = function () {
+    clearTimeout(timeout);
+    timeout = null;
+  };
+
+  return throttled;
+}
+function deepEqual(val1, val2) {
+  if (val1 === val2) return true;
+
+  if (_typeof(val1) === 'object') {
+    for (var key in val1) {
+      if (!deepEqual(val1[key], val2[key])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
 }
 
-var VisibilityState = function () {
-	function VisibilityState(el, options, vnode) {
-		classCallCheck(this, VisibilityState);
+var VisibilityState =
+/*#__PURE__*/
+function () {
+  function VisibilityState(el, options, vnode) {
+    _classCallCheck(this, VisibilityState);
 
-		this.el = el;
-		this.observer = null;
-		this.createObserver(options, vnode);
-	}
+    this.el = el;
+    this.observer = null;
+    this.frozen = false;
+    this.createObserver(options, vnode);
+  }
 
-	createClass(VisibilityState, [{
-		key: 'createObserver',
-		value: function createObserver(options, vnode) {
-			var _this = this;
+  _createClass(VisibilityState, [{
+    key: "createObserver",
+    value: function createObserver(options, vnode) {
+      var _this = this;
 
-			if (this.observer) {
-				this.destroyObserver();
-			}
+      if (this.observer) {
+        this.destroyObserver();
+      }
 
-			this.options = processOptions(options);
+      if (this.frozen) return;
+      this.options = processOptions(options);
 
-			this.callback = this.options.callback;
-			// Throttle
-			if (this.callback && this.options.throttle) {
-				this.callback = throttle(this.callback, this.options.throttle);
-			}
+      this.callback = function (result, entry) {
+        _this.options.callback(result, entry);
 
-			this.observer = new IntersectionObserver(function (entries) {
-				var entry = entries[0];
-				if (_this.callback) {
-					// Use isIntersecting if possible because browsers can report isIntersecting as true, but intersectionRatio as 0, when something very slowly enters the viewport.
-					_this.callback(entry.isIntersecting && entry.intersectionRatio >= _this.threshold, entry);
-				}
-			}, this.options.intersection);
+        if (result && _this.options.once) {
+          _this.frozen = true;
 
-			// Wait for the element to be in document
-			vnode.context.$nextTick(function () {
-				_this.observer.observe(_this.el);
-			});
-		}
-	}, {
-		key: 'destroyObserver',
-		value: function destroyObserver() {
-			if (this.observer) {
-				this.observer.disconnect();
-			}
+          _this.destroyObserver();
+        }
+      }; // Throttle
 
-			// Cancel throttled call
-			if (this.callback && this.callback._clear) {
-				this.callback._clear();
-			}
-		}
-	}, {
-		key: 'threshold',
-		get: function get$$1() {
-			return this.options.intersection && this.options.intersection.threshold || 0;
-		}
-	}]);
-	return VisibilityState;
+
+      if (this.callback && this.options.throttle) {
+        var _ref = this.options.throttleOptions || {},
+            _leading = _ref.leading;
+
+        this.callback = throttle(this.callback, this.options.throttle, {
+          leading: function leading(state) {
+            return _leading === 'both' || _leading === 'visible' && state || _leading === 'hidden' && !state;
+          }
+        });
+      }
+
+      this.oldResult = undefined;
+      this.observer = new IntersectionObserver(function (entries) {
+        var entry = entries[0];
+
+        if (entries.length > 1) {
+          var intersectingEntry = entries.find(function (e) {
+            return e.isIntersecting;
+          });
+
+          if (intersectingEntry) {
+            entry = intersectingEntry;
+          }
+        }
+
+        if (_this.callback) {
+          // Use isIntersecting if possible because browsers can report isIntersecting as true, but intersectionRatio as 0, when something very slowly enters the viewport.
+          var result = entry.isIntersecting && entry.intersectionRatio >= _this.threshold;
+          if (result === _this.oldResult) return;
+          _this.oldResult = result;
+
+          _this.callback(result, entry);
+        }
+      }, this.options.intersection); // Wait for the element to be in document
+
+      vnode.context.$nextTick(function () {
+        if (_this.observer) {
+          _this.observer.observe(_this.el);
+        }
+      });
+    }
+  }, {
+    key: "destroyObserver",
+    value: function destroyObserver() {
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      } // Cancel throttled call
+
+
+      if (this.callback && this.callback._clear) {
+        this.callback._clear();
+
+        this.callback = null;
+      }
+    }
+  }, {
+    key: "threshold",
+    get: function get() {
+      return this.options.intersection && this.options.intersection.threshold || 0;
+    }
+  }]);
+
+  return VisibilityState;
 }();
 
+function bind(el, _ref2, vnode) {
+  var value = _ref2.value;
+  if (!value) return;
+
+  if (typeof IntersectionObserver === 'undefined') {
+    console.warn('[vue-observe-visibility] IntersectionObserver API is not available in your browser. Please install this polyfill: https://github.com/w3c/IntersectionObserver/tree/master/polyfill');
+  } else {
+    var state = new VisibilityState(el, value, vnode);
+    el._vue_visibilityState = state;
+  }
+}
+
+function update(el, _ref3, vnode) {
+  var value = _ref3.value,
+      oldValue = _ref3.oldValue;
+  if (deepEqual(value, oldValue)) return;
+  var state = el._vue_visibilityState;
+
+  if (!value) {
+    unbind(el);
+    return;
+  }
+
+  if (state) {
+    state.createObserver(value, vnode);
+  } else {
+    bind(el, {
+      value: value
+    }, vnode);
+  }
+}
+
+function unbind(el) {
+  var state = el._vue_visibilityState;
+
+  if (state) {
+    state.destroyObserver();
+    delete el._vue_visibilityState;
+  }
+}
+
 var ObserveVisibility = {
-	bind: function bind(el, _ref, vnode) {
-		var value = _ref.value;
-
-		if (typeof IntersectionObserver === 'undefined') {
-			console.warn('[vue-observe-visibility] IntersectionObserver API is not available in your browser. Please install this polyfill: https://github.com/w3c/IntersectionObserver/tree/master/polyfill');
-		} else {
-			var state = new VisibilityState(el, value, vnode);
-			el._vue_visibilityState = state;
-		}
-	},
-	update: function update(el, _ref2, vnode) {
-		var value = _ref2.value;
-
-		var state = el._vue_visibilityState;
-		if (state) {
-			state.createObserver(value, vnode);
-		} else {
-			this.bind(el, { value: value }, vnode);
-		}
-	},
-	unbind: function unbind(el) {
-		var state = el._vue_visibilityState;
-		if (state) {
-			state.destroyObserver();
-			delete el._vue_visibilityState;
-		}
-	}
+  bind: bind,
+  update: update,
+  unbind: unbind
 };
 
-// Install the components
 function install$1(Vue) {
-	Vue.directive('observe-visibility', ObserveVisibility);
-	/* -- Add more components here -- */
+  Vue.directive('observe-visibility', ObserveVisibility);
+  /* -- Add more components here -- */
 }
-
 /* -- Plugin definition & Auto-install -- */
-/* You shouldn't have to modify the code below */
 
+/* You shouldn't have to modify the code below */
 // Plugin
+
 var plugin$1 = {
-	// eslint-disable-next-line no-undef
-	version: "0.4.1",
-	install: install$1
+  // eslint-disable-next-line no-undef
+  version: "0.4.6",
+  install: install$1
 };
 
-// Auto-install
 var GlobalVue$1 = null;
+
 if (typeof window !== 'undefined') {
-	GlobalVue$1 = window.Vue;
+  GlobalVue$1 = window.Vue;
 } else if (typeof global !== 'undefined') {
-	GlobalVue$1 = global.Vue;
-}
-if (GlobalVue$1) {
-	GlobalVue$1.use(plugin$1);
+  GlobalVue$1 = global.Vue;
 }
 
-var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+if (GlobalVue$1) {
+  GlobalVue$1.use(plugin$1);
+}
+
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -847,6 +916,142 @@ var script = {
   }
 };
 
+function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
+/* server only */
+, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
+  if (typeof shadowMode !== 'boolean') {
+    createInjectorSSR = createInjector;
+    createInjector = shadowMode;
+    shadowMode = false;
+  } // Vue.extend constructor export interop.
+
+
+  var options = typeof script === 'function' ? script.options : script; // render functions
+
+  if (template && template.render) {
+    options.render = template.render;
+    options.staticRenderFns = template.staticRenderFns;
+    options._compiled = true; // functional template
+
+    if (isFunctionalTemplate) {
+      options.functional = true;
+    }
+  } // scopedId
+
+
+  if (scopeId) {
+    options._scopeId = scopeId;
+  }
+
+  var hook;
+
+  if (moduleIdentifier) {
+    // server build
+    hook = function hook(context) {
+      // 2.3 injection
+      context = context || // cached call
+      this.$vnode && this.$vnode.ssrContext || // stateful
+      this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext; // functional
+      // 2.2 with runInNewContext: true
+
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+      } // inject component styles
+
+
+      if (style) {
+        style.call(this, createInjectorSSR(context));
+      } // register component module identifier for async chunk inference
+
+
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier);
+      }
+    }; // used by ssr in case component is cached and beforeCreate
+    // never gets called
+
+
+    options._ssrRegister = hook;
+  } else if (style) {
+    hook = shadowMode ? function () {
+      style.call(this, createInjectorShadow(this.$root.$options.shadowRoot));
+    } : function (context) {
+      style.call(this, createInjector(context));
+    };
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // register for functional component in vue file
+      var originalRender = options.render;
+
+      options.render = function renderWithStyleInjection(h, context) {
+        hook.call(context);
+        return originalRender(h, context);
+      };
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate;
+      options.beforeCreate = existing ? [].concat(existing, hook) : [hook];
+    }
+  }
+
+  return script;
+}
+
+var normalizeComponent_1 = normalizeComponent;
+
+var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+function createInjector(context) {
+  return function (id, style) {
+    return addStyle(id, style);
+  };
+}
+var HEAD = document.head || document.getElementsByTagName('head')[0];
+var styles = {};
+
+function addStyle(id, css) {
+  var group = isOldIE ? css.media || 'default' : id;
+  var style = styles[group] || (styles[group] = {
+    ids: new Set(),
+    styles: []
+  });
+
+  if (!style.ids.has(id)) {
+    style.ids.add(id);
+    var code = css.source;
+
+    if (css.map) {
+      // https://developer.chrome.com/devtools/docs/javascript-debugging
+      // this makes source maps inside style tags work properly in Chrome
+      code += '\n/*# sourceURL=' + css.map.sources[0] + ' */'; // http://stackoverflow.com/a/26603875
+
+      code += '\n/*# sourceMappingURL=data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) + ' */';
+    }
+
+    if (!style.element) {
+      style.element = document.createElement('style');
+      style.element.type = 'text/css';
+      if (css.media) style.element.setAttribute('media', css.media);
+      HEAD.appendChild(style.element);
+    }
+
+    if ('styleSheet' in style.element) {
+      style.styles.push(code);
+      style.element.styleSheet.cssText = style.styles.filter(Boolean).join('\n');
+    } else {
+      var index = style.ids.size - 1;
+      var textNode = document.createTextNode(code);
+      var nodes = style.element.childNodes;
+      if (nodes[index]) style.element.removeChild(nodes[index]);
+      if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
+    }
+  }
+}
+
+var browser = createInjector;
+
+/* script */
 var __vue_script__ = script;
 
 /* template */
@@ -907,117 +1112,20 @@ var __vue_render__ = function __vue_render__() {
 var __vue_staticRenderFns__ = [];
 __vue_render__._withStripped = true;
 
-var __vue_template__ = typeof __vue_render__ !== 'undefined' ? { render: __vue_render__, staticRenderFns: __vue_staticRenderFns__ } : {};
 /* style */
-var __vue_inject_styles__ = function (inject) {
+var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-98277cdc_0", { source: "\n.virtual-scroller[data-v-98277cdc]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-98277cdc] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-98277cdc] {\n  width: 100%;\n}\n", map: undefined, media: undefined });
+  inject("data-v-535886dd_0", { source: "\n.virtual-scroller[data-v-535886dd]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-container[data-v-535886dd] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n.items[data-v-535886dd] {\n  width: 100%;\n}\n", map: { "version": 3, "sources": ["/home/aitor/projects/vue-virtual-scroller/src/components/VirtualScroller.vue"], "names": [], "mappings": ";AA8UA;EACA,gBAAA;AACA;AAEA;EACA,sBAAA;EACA,WAAA;EACA,gBAAA;AACA;AAEA;EACA,WAAA;AACA", "file": "VirtualScroller.vue", "sourcesContent": ["<template>\n  <component\n    v-observe-visibility=\"handleVisibilityChange\"\n    :is=\"mainTag\"\n    :class=\"cssClass\"\n    class=\"virtual-scroller\"\n    @scroll.passive=\"handleScroll\"\n  >\n    <slot\n      name=\"before-container\"\n    />\n    <component\n      ref=\"itemContainer\"\n      :is=\"containerTag\"\n      :class=\"containerClass\"\n      :style=\"itemContainerStyle\"\n      class=\"item-container\"\n    >\n      <slot\n        name=\"before-content\"\n      />\n      <component\n        ref=\"items\"\n        :is=\"contentTag\"\n        :class=\"contentClass\"\n        :style=\"itemsStyle\"\n        class=\"items\"\n      >\n        <component\n          ref=\"items\"\n          :is=\"wrapperTag\"\n          :class=\"wrapperClass\"\n          class=\"wrapper\"\n        >\n          <template v-if=\"renderers\">\n            <component\n              v-for=\"(item, index) in visibleItems\"\n              :key=\"keysEnabled && getKey(item) || undefined\"\n              :is=\"renderers[item[typeField]]\"\n              :item=\"item\"\n              :item-index=\"$_startIndex + index\"\n              class=\"item\"\n            />\n          </template>\n          <template v-else>\n            <slot\n              v-for=\"(item, index) in visibleItems\"\n              :item=\"item\"\n              :item-index=\"$_startIndex + index\"\n              :item-key=\"keysEnabled && getKey(item) || undefined\"\n              class=\"item\"\n            />\n          </template>\n        </component>\n      </component>\n      <slot\n        name=\"after-content\"\n      />\n    </component>\n    <slot\n      name=\"after-container\"\n    />\n    <resize-observer @notify=\"handleResize\" />\n  </component>\n</template>\n\n<script>\nimport Scroller from '../mixins/scroller'\nimport config from '../config'\n\nexport default {\n  name: 'VirtualScroller',\n\n  mixins: [\n    Scroller,\n  ],\n\n  props: {\n    renderers: {\n      type: Object,\n      default: null,\n    },\n    getKey: {\n      type: Function,\n      default: (item) => { return item.id },\n    },\n    mainTag: {\n      type: String,\n      default: 'div',\n    },\n    containerTag: {\n      type: String,\n      default: 'div',\n    },\n    containerClass: {\n      type: [String, Array, Object],\n      default: null,\n    },\n    contentTag: {\n      type: String,\n      default: 'div',\n    },\n    contentClass: {\n      type: [String, Array, Object],\n      default: null,\n    },\n    wrapperTag: {\n      type: String,\n      default: 'div',\n    },\n    wrapperClass: {\n      type: [String, Array, Object],\n      default: null,\n    },\n    poolSize: {\n      type: [Number, String],\n      default: 2000,\n    },\n    delayPreviousItems: {\n      type: Boolean,\n      default: false,\n    },\n  },\n\n  data () {\n    return {\n      visibleItems: [],\n      itemContainerStyle: null,\n      itemsStyle: null,\n      keysEnabled: true,\n    }\n  },\n\n  watch: {\n    items: {\n      handler () {\n        this.updateVisibleItems(true)\n      },\n      deep: true,\n    },\n    pageMode () {\n      this.applyPageMode()\n      this.updateVisibleItems(true)\n    },\n    itemHeight: 'setDirty',\n  },\n\n  created () {\n    this.$_ready = false\n    this.$_startIndex = 0\n    this.$_oldScrollTop = null\n    this.$_oldScrollBottom = null\n    this.$_offsetTop = 0\n    this.$_height = 0\n    this.$_scrollDirty = false\n    this.$_updateDirty = false\n\n    const prerender = parseInt(this.prerender)\n    if (prerender > 0) {\n      this.visibleItems = this.items.slice(0, prerender)\n      this.$_length = this.visibleItems.length\n      this.$_endIndex = this.$_length - 1\n      this.$_skip = true\n    } else {\n      this.$_endIndex = 0\n      this.$_length = 0\n      this.$_skip = false\n    }\n  },\n\n  mounted () {\n    this.applyPageMode()\n    this.$nextTick(() => {\n      this.updateVisibleItems(true)\n      this.$_ready = true\n    })\n  },\n\n  methods: {\n    updateVisibleItems (force = false) {\n      if (!this.$_updateDirty) {\n        this.$_updateDirty = true\n        this.$nextTick(() => {\n          this.$_updateDirty = false\n\n          const l = this.items.length\n          const scroll = this.getScroll()\n          const items = this.items\n          const itemHeight = this.itemHeight\n          let containerHeight, offsetTop\n          if (scroll) {\n            let startIndex = -1\n            let endIndex = -1\n\n            const buffer = parseInt(this.buffer)\n            const poolSize = parseInt(this.poolSize)\n            const scrollTop = ~~(scroll.top / poolSize) * poolSize - buffer\n            const scrollBottom = Math.ceil(scroll.bottom / poolSize) * poolSize + buffer\n\n            if (!force && ((scrollTop === this.$_oldScrollTop && scrollBottom === this.$_oldScrollBottom) || this.$_skip)) {\n              this.$_skip = false\n              return\n            } else {\n              this.$_oldScrollTop = scrollTop\n              this.$_oldScrollBottom = scrollBottom\n            }\n\n            // Variable height mode\n            if (itemHeight === null) {\n              const heights = this.heights\n              let h\n              let a = 0\n              let b = l - 1\n              let i = ~~(l / 2)\n              let oldI\n\n              // Searching for startIndex\n              do {\n                oldI = i\n                h = heights[i].accumulator\n                if (h < scrollTop) {\n                  a = i\n                } else if (i < l - 1 && heights[i + 1].accumulator > scrollTop) {\n                  b = i\n                }\n                i = ~~((a + b) / 2)\n              } while (i !== oldI)\n              i < 0 && (i = 0)\n              startIndex = i\n\n              // For containers style\n              offsetTop = i > 0 ? heights[i - 1].accumulator : 0\n              containerHeight = heights[l - 1].accumulator\n\n              // Searching for endIndex\n              for (endIndex = i; endIndex < l && heights[endIndex].accumulator < scrollBottom; endIndex++);\n              if (endIndex === -1) {\n                endIndex = items.length - 1\n              } else {\n                endIndex++\n                // Bounds\n                endIndex > l && (endIndex = l)\n              }\n            } else {\n              // Fixed height mode\n              startIndex = ~~(scrollTop / itemHeight)\n              endIndex = Math.ceil(scrollBottom / itemHeight)\n\n              // Bounds\n              startIndex < 0 && (startIndex = 0)\n              endIndex > l && (endIndex = l)\n\n              offsetTop = startIndex * itemHeight\n              containerHeight = l * itemHeight\n            }\n\n            if (endIndex - startIndex > config.itemsLimit) {\n              this.itemsLimitError()\n            }\n\n            if (\n              force ||\n              this.$_startIndex !== startIndex ||\n              this.$_endIndex !== endIndex ||\n              this.$_offsetTop !== offsetTop ||\n              this.$_height !== containerHeight ||\n              this.$_length !== l\n            ) {\n              this.keysEnabled = !(startIndex > this.$_endIndex || endIndex < this.$_startIndex)\n\n              this.itemContainerStyle = {\n                height: containerHeight + 'px',\n              }\n              this.itemsStyle = {\n                marginTop: offsetTop + 'px',\n              }\n\n              if (this.delayPreviousItems) {\n                // Add next items\n                this.visibleItems = items.slice(this.$_startIndex, endIndex)\n                // Remove previous items\n                this.$nextTick(() => {\n                  this.visibleItems = items.slice(startIndex, endIndex)\n                })\n              } else {\n                this.visibleItems = items.slice(startIndex, endIndex)\n              }\n\n              this.emitUpdate && this.$emit('update', startIndex, endIndex)\n\n              this.$_startIndex = startIndex\n              this.$_endIndex = endIndex\n              this.$_length = l\n              this.$_offsetTop = offsetTop\n              this.$_height = containerHeight\n            }\n          }\n        })\n      }\n    },\n\n    setDirty () {\n      this.$_oldScrollTop = null\n      this.$_oldScrollBottom = null\n    },\n\n    handleScroll () {\n      if (!this.$_scrollDirty) {\n        this.$_scrollDirty = true\n        requestAnimationFrame(() => {\n          this.$_scrollDirty = false\n          this.updateVisibleItems()\n        })\n      }\n    },\n\n    handleResize () {\n      this.$emit('resize')\n      this.$_ready && this.updateVisibleItems()\n    },\n\n    handleVisibilityChange (isVisible, entry) {\n      if (this.$_ready && (isVisible || entry.boundingClientRect.width !== 0 || entry.boundingClientRect.height !== 0)) {\n        this.$emit('visible')\n        this.$nextTick(() => {\n          this.updateVisibleItems()\n        })\n      }\n    },\n  },\n}\n</script>\n\n<style scoped>\n.virtual-scroller:not(.page-mode) {\n  overflow-y: auto;\n}\n\n.item-container {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n}\n\n.items {\n  width: 100%;\n}\n</style>\n"] }, media: undefined });
 };
 /* scoped */
-var __vue_scope_id__ = "data-v-98277cdc";
+var __vue_scope_id__ = "data-v-535886dd";
 /* module identifier */
 var __vue_module_identifier__ = undefined;
 /* functional template */
 var __vue_is_functional_template__ = false;
-/* component normalizer */
-function __vue_normalize__(template, style, script$$1, scope, functional, moduleIdentifier, createInjector, createInjectorSSR) {
-  var component = (typeof script$$1 === 'function' ? script$$1.options : script$$1) || {};
-
-  {
-    component.__file = 'C:\\Users\\Dani\\Code\\Clarity\\vue-virtual-scroller\\src\\components\\VirtualScroller.vue';
-  }
-
-  if (!component.render) {
-    component.render = template.render;
-    component.staticRenderFns = template.staticRenderFns;
-    component._compiled = true;
-
-    if (functional) component.functional = true;
-  }
-
-  component._scopeId = scope;
-
-  {
-    var hook = void 0;
-    if (style) {
-      hook = function hook(context) {
-        style.call(this, createInjector(context));
-      };
-    }
-
-    if (hook !== undefined) {
-      if (component.functional) {
-        // register for functional component in vue file
-        var originalRender = component.render;
-        component.render = function renderWithStyleInjection(h, context) {
-          hook.call(context);
-          return originalRender(h, context);
-        };
-      } else {
-        // inject component registration as beforeCreate hook
-        var existing = component.beforeCreate;
-        component.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-      }
-    }
-  }
-
-  return component;
-}
-/* style inject */
-function __vue_create_injector__() {
-  var head = document.head || document.getElementsByTagName('head')[0];
-  var styles = __vue_create_injector__.styles || (__vue_create_injector__.styles = {});
-  var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
-
-  return function addStyle(id, css) {
-    if (document.querySelector('style[data-vue-ssr-id~="' + id + '"]')) return; // SSR styles are present.
-
-    var group = isOldIE ? css.media || 'default' : id;
-    var style = styles[group] || (styles[group] = { ids: [], parts: [], element: undefined });
-
-    if (!style.ids.includes(id)) {
-      var code = css.source;
-      var index = style.ids.length;
-
-      style.ids.push(id);
-
-      if (isOldIE) {
-        style.element = style.element || document.querySelector('style[data-group=' + group + ']');
-      }
-
-      if (!style.element) {
-        var el = style.element = document.createElement('style');
-        el.type = 'text/css';
-
-        if (css.media) el.setAttribute('media', css.media);
-        if (isOldIE) {
-          el.setAttribute('data-group', group);
-          el.setAttribute('data-next-index', '0');
-        }
-
-        head.appendChild(el);
-      }
-
-      if (isOldIE) {
-        index = parseInt(style.element.getAttribute('data-next-index'));
-        style.element.setAttribute('data-next-index', index + 1);
-      }
-
-      if (style.element.styleSheet) {
-        style.parts.push(code);
-        style.element.styleSheet.cssText = style.parts.filter(Boolean).join('\n');
-      } else {
-        var textNode = document.createTextNode(code);
-        var nodes = style.element.childNodes;
-        if (nodes[index]) style.element.removeChild(nodes[index]);
-        if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
-      }
-    }
-  };
-}
 /* style inject SSR */
 
-var VirtualScroller = __vue_normalize__(__vue_template__, __vue_inject_styles__, typeof __vue_script__ === 'undefined' ? {} : __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, typeof __vue_create_injector__ !== 'undefined' ? __vue_create_injector__ : function () {}, typeof __vue_create_injector_ssr__ !== 'undefined' ? __vue_create_injector_ssr__ : function () {});
+var VirtualScroller = normalizeComponent_1({ render: __vue_render__, staticRenderFns: __vue_staticRenderFns__ }, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, browser, undefined);
 
 //
 
@@ -1348,6 +1456,7 @@ var script$1 = {
   }
 };
 
+/* script */
 var __vue_script__$1 = script$1;
 
 /* template */
@@ -1383,122 +1492,25 @@ var __vue_render__$1 = function __vue_render__() {
       index: view.nr.index,
       active: view.nr.used
     })], 2);
-  })), _vm._v(" "), _vm._t("after-container"), _vm._v(" "), _c("resize-observer", { on: { notify: _vm.handleResize } })], 2);
+  }), 0), _vm._v(" "), _vm._t("after-container"), _vm._v(" "), _c("resize-observer", { on: { notify: _vm.handleResize } })], 2);
 };
 var __vue_staticRenderFns__$1 = [];
 __vue_render__$1._withStripped = true;
 
-var __vue_template__$1 = typeof __vue_render__$1 !== 'undefined' ? { render: __vue_render__$1, staticRenderFns: __vue_staticRenderFns__$1 } : {};
 /* style */
-var __vue_inject_styles__$1 = function (inject) {
+var __vue_inject_styles__$1 = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-42526b74_0", { source: "\n.recycle-list[data-v-42526b74]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-wrapper[data-v-42526b74] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n  position: relative;\n}\n.item-view[data-v-42526b74] {\n  width: 100%;\n  position: absolute;\n  top: 0;\n  left: 0;\n  will-change: transform;\n}\n", map: undefined, media: undefined });
+  inject("data-v-0c0e304a_0", { source: "\n.recycle-list[data-v-0c0e304a]:not(.page-mode) {\n  overflow-y: auto;\n}\n.item-wrapper[data-v-0c0e304a] {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n  position: relative;\n}\n.item-view[data-v-0c0e304a] {\n  width: 100%;\n  position: absolute;\n  top: 0;\n  left: 0;\n  will-change: transform;\n}\n", map: { "version": 3, "sources": ["/home/aitor/projects/vue-virtual-scroller/src/components/RecycleList.vue"], "names": [], "mappings": ";AAwWA;EACA,gBAAA;AACA;AAEA;EACA,sBAAA;EACA,WAAA;EACA,gBAAA;EACA,kBAAA;AACA;AAEA;EACA,WAAA;EACA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,sBAAA;AACA", "file": "RecycleList.vue", "sourcesContent": ["<template>\n  <div\n    v-observe-visibility=\"handleVisibilityChange\"\n    :class=\"cssClass\"\n    class=\"recycle-list\"\n    @scroll.passive=\"handleScroll\"\n  >\n    <div\n      ref=\"wrapper\"\n      :style=\"{ height: totalHeight + 'px' }\"\n      class=\"item-wrapper\"\n    >\n      <div\n        v-for=\"view of pool\"\n        :key=\"view.nr.id\"\n        :style=\"{ transform: 'translateY(' + view.top + 'px)' }\"\n        class=\"item-view\"\n      >\n        <slot\n          :item=\"view.item\"\n          :index=\"view.nr.index\"\n          :active=\"view.nr.used\"\n        />\n      </div>\n    </div>\n\n    <slot\n      name=\"after-container\"\n    />\n\n    <resize-observer @notify=\"handleResize\" />\n  </div>\n</template>\n\n<script>\nimport Scroller from '../mixins/scroller'\nimport config from '../config'\n\nlet uid = 0\n\nexport default {\n  name: 'RecycleList',\n\n  mixins: [\n    Scroller,\n  ],\n\n  props: {\n    itemHeight: {\n      type: Number,\n      default: null,\n    },\n    keyField: {\n      type: String,\n      default: null,\n    },\n  },\n\n  data () {\n    return {\n      pool: [],\n      totalHeight: 0,\n    }\n  },\n\n  watch: {\n    items () {\n      this.updateVisibleItems(true)\n    },\n    pageMode () {\n      this.applyPageMode()\n      this.updateVisibleItems(false)\n    },\n    heights: {\n      handler () {\n        this.updateVisibleItems(false)\n      },\n      deep: true,\n    },\n  },\n\n  created () {\n    this.$_ready = false\n    this.$_startIndex = 0\n    this.$_endIndex = 0\n    this.$_views = new Map()\n    this.$_unusedViews = new Map()\n    this.$_scrollDirty = false\n\n    // TODO prerender\n  },\n\n  mounted () {\n    this.applyPageMode()\n    this.$nextTick(() => {\n      this.updateVisibleItems(true)\n      this.$_ready = true\n    })\n  },\n\n  methods: {\n    addView (pool, index, item, key, type) {\n      const view = {\n        item,\n        top: 0,\n      }\n      const nonReactive = {\n        id: uid++,\n        index,\n        used: true,\n        key,\n        type,\n      }\n      Object.defineProperty(view, 'nr', {\n        configurable: false,\n        value: nonReactive,\n      })\n      pool.push(view)\n      return view\n    },\n\n    unuseView (view, fake = false) {\n      const unusedViews = this.$_unusedViews\n      const type = view.nr.type\n      let unusedPool = unusedViews.get(type)\n      if (!unusedPool) {\n        unusedPool = []\n        unusedViews.set(type, unusedPool)\n      }\n      unusedPool.push(view)\n      if (!fake) {\n        view.nr.used = false\n        view.top = -9999\n        this.$_views.delete(view.nr.key)\n      }\n    },\n\n    handleResize () {\n      this.$emit('resize')\n      if (this.$_ready) this.updateVisibleItems(false)\n    },\n\n    handleScroll (event) {\n      if (!this.$_scrollDirty) {\n        this.$_scrollDirty = true\n        requestAnimationFrame(() => {\n          this.$_scrollDirty = false\n          const { continuous } = this.updateVisibleItems(false)\n\n          // It seems sometimes chrome doesn't fire scroll event :/\n          // When non continous scrolling is ending, we force a refresh\n          if (!continuous) {\n            clearTimeout(this.$_refreshTimout)\n            this.$_refreshTimout = setTimeout(this.handleScroll, 100)\n          }\n        })\n      }\n    },\n\n    handleVisibilityChange (isVisible, entry) {\n      if (this.$_ready && (isVisible || entry.boundingClientRect.width !== 0 || entry.boundingClientRect.height !== 0)) {\n        this.$emit('visible')\n        requestAnimationFrame(() => {\n          this.updateVisibleItems(false)\n        })\n      }\n    },\n\n    updateVisibleItems (checkItem) {\n      const scroll = this.getScroll()\n      const buffer = parseInt(this.buffer)\n      scroll.top -= buffer\n      scroll.bottom += buffer\n\n      const itemHeight = this.itemHeight\n      const typeField = this.typeField\n      const keyField = this.keyField\n      const items = this.items\n      const count = items.length\n      const heights = this.heights\n      const views = this.$_views\n      let unusedViews = this.$_unusedViews\n      const pool = this.pool\n      let startIndex, endIndex\n      let totalHeight\n\n      if (!count) {\n        startIndex = endIndex = totalHeight = 0\n      } else {\n        // Variable height mode\n        if (itemHeight === null) {\n          let h\n          let a = 0\n          let b = count - 1\n          let i = ~~(count / 2)\n          let oldI\n\n          // Searching for startIndex\n          do {\n            oldI = i\n            h = heights[i].accumulator\n            if (h < scroll.top) {\n              a = i\n            } else if (i < count - 1 && heights[i + 1].accumulator > scroll.top) {\n              b = i\n            }\n            i = ~~((a + b) / 2)\n          } while (i !== oldI)\n          i < 0 && (i = 0)\n          startIndex = i\n\n          // For container style\n          totalHeight = heights[count - 1].accumulator\n\n          // Searching for endIndex\n          for (endIndex = i; endIndex < count && heights[endIndex].accumulator < scroll.bottom; endIndex++);\n          if (endIndex === -1) {\n            endIndex = items.length - 1\n          } else {\n            endIndex++\n            // Bounds\n            endIndex > count && (endIndex = count)\n          }\n        } else {\n          // Fixed height mode\n          startIndex = ~~(scroll.top / itemHeight)\n          endIndex = Math.ceil(scroll.bottom / itemHeight)\n\n          // Bounds\n          startIndex < 0 && (startIndex = 0)\n          endIndex > count && (endIndex = count)\n\n          totalHeight = count * itemHeight\n        }\n      }\n\n      if (endIndex - startIndex > config.itemsLimit) {\n        this.itemsLimitError()\n      }\n\n      this.totalHeight = totalHeight\n\n      let view\n\n      const continuous = startIndex <= this.$_endIndex && endIndex >= this.$_startIndex\n      let unusedIndex\n\n      if (this.$_continuous !== continuous) {\n        if (continuous) {\n          views.clear()\n          unusedViews.clear()\n          for (let i = 0, l = pool.length; i < l; i++) {\n            view = pool[i]\n            this.unuseView(view)\n          }\n        }\n        this.$_continuous = continuous\n      } else if (continuous) {\n        for (let i = 0, l = pool.length; i < l; i++) {\n          view = pool[i]\n          if (view.nr.used) {\n            // Update view item index\n            if (checkItem) {\n              view.nr.index = items.findIndex(\n                item => keyField ? item[keyField] === view.item[keyField] : item === view.item\n              )\n            }\n\n            // Check if index is still in visible range\n            if (\n              view.nr.index === -1 ||\n              view.nr.index < startIndex ||\n              view.nr.index > endIndex\n            ) {\n              this.unuseView(view)\n            }\n          }\n        }\n      }\n\n      if (!continuous) {\n        unusedIndex = new Map()\n      }\n\n      let item, type, unusedPool\n      let v\n      for (let i = startIndex; i < endIndex; i++) {\n        item = items[i]\n        const key = keyField ? item[keyField] : item\n        view = views.get(key)\n\n        if (!itemHeight && !heights[i].height) {\n          if (view) this.unuseView(view)\n          continue\n        }\n\n        // No view assigned to item\n        if (!view) {\n          type = item[typeField]\n\n          if (continuous) {\n            unusedPool = unusedViews.get(type)\n            // Reuse existing view\n            if (unusedPool && unusedPool.length) {\n              view = unusedPool.pop()\n              view.item = item\n              view.nr.used = true\n              view.nr.index = i\n              view.nr.key = key\n              view.nr.type = type\n            } else {\n              view = this.addView(pool, i, item, key, type)\n            }\n          } else {\n            unusedPool = unusedViews.get(type)\n            v = unusedIndex.get(type) || 0\n            // Use existing view\n            // We don't care if they are already used\n            // because we are not in continous scrolling\n            if (unusedPool && v < unusedPool.length) {\n              view = unusedPool[v]\n              view.item = item\n              view.nr.used = true\n              view.nr.index = i\n              view.nr.key = key\n              view.nr.type = type\n              unusedIndex.set(type, v + 1)\n            } else {\n              view = this.addView(pool, i, item, key, type)\n              this.unuseView(view, true)\n            }\n            v++\n          }\n          views.set(key, view)\n        } else {\n          view.nr.used = true\n        }\n\n        // Update position\n        if (itemHeight === null) {\n          view.top = heights[i - 1].accumulator\n        } else {\n          view.top = i * itemHeight\n        }\n      }\n\n      this.$_startIndex = startIndex\n      this.$_endIndex = endIndex\n\n      this.emitUpdate && this.$emit('update', startIndex, endIndex)\n\n      return {\n        continuous,\n      }\n    },\n  },\n}\n</script>\n\n<style scoped>\n.recycle-list:not(.page-mode) {\n  overflow-y: auto;\n}\n\n.item-wrapper {\n  box-sizing: border-box;\n  width: 100%;\n  overflow: hidden;\n  position: relative;\n}\n\n.item-view {\n  width: 100%;\n  position: absolute;\n  top: 0;\n  left: 0;\n  will-change: transform;\n}\n</style>\n"] }, media: undefined });
 };
 /* scoped */
-var __vue_scope_id__$1 = "data-v-42526b74";
+var __vue_scope_id__$1 = "data-v-0c0e304a";
 /* module identifier */
 var __vue_module_identifier__$1 = undefined;
 /* functional template */
 var __vue_is_functional_template__$1 = false;
-/* component normalizer */
-function __vue_normalize__$1(template, style, script, scope, functional, moduleIdentifier, createInjector, createInjectorSSR) {
-  var component = (typeof script === 'function' ? script.options : script) || {};
-
-  {
-    component.__file = 'C:\\Users\\Dani\\Code\\Clarity\\vue-virtual-scroller\\src\\components\\RecycleList.vue';
-  }
-
-  if (!component.render) {
-    component.render = template.render;
-    component.staticRenderFns = template.staticRenderFns;
-    component._compiled = true;
-
-    if (functional) component.functional = true;
-  }
-
-  component._scopeId = scope;
-
-  {
-    var hook = void 0;
-    if (style) {
-      hook = function hook(context) {
-        style.call(this, createInjector(context));
-      };
-    }
-
-    if (hook !== undefined) {
-      if (component.functional) {
-        // register for functional component in vue file
-        var originalRender = component.render;
-        component.render = function renderWithStyleInjection(h, context) {
-          hook.call(context);
-          return originalRender(h, context);
-        };
-      } else {
-        // inject component registration as beforeCreate hook
-        var existing = component.beforeCreate;
-        component.beforeCreate = existing ? [].concat(existing, hook) : [hook];
-      }
-    }
-  }
-
-  return component;
-}
-/* style inject */
-function __vue_create_injector__$1() {
-  var head = document.head || document.getElementsByTagName('head')[0];
-  var styles = __vue_create_injector__$1.styles || (__vue_create_injector__$1.styles = {});
-  var isOldIE = typeof navigator !== 'undefined' && /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
-
-  return function addStyle(id, css) {
-    if (document.querySelector('style[data-vue-ssr-id~="' + id + '"]')) return; // SSR styles are present.
-
-    var group = isOldIE ? css.media || 'default' : id;
-    var style = styles[group] || (styles[group] = { ids: [], parts: [], element: undefined });
-
-    if (!style.ids.includes(id)) {
-      var code = css.source;
-      var index = style.ids.length;
-
-      style.ids.push(id);
-
-      if (isOldIE) {
-        style.element = style.element || document.querySelector('style[data-group=' + group + ']');
-      }
-
-      if (!style.element) {
-        var el = style.element = document.createElement('style');
-        el.type = 'text/css';
-
-        if (css.media) el.setAttribute('media', css.media);
-        if (isOldIE) {
-          el.setAttribute('data-group', group);
-          el.setAttribute('data-next-index', '0');
-        }
-
-        head.appendChild(el);
-      }
-
-      if (isOldIE) {
-        index = parseInt(style.element.getAttribute('data-next-index'));
-        style.element.setAttribute('data-next-index', index + 1);
-      }
-
-      if (style.element.styleSheet) {
-        style.parts.push(code);
-        style.element.styleSheet.cssText = style.parts.filter(Boolean).join('\n');
-      } else {
-        var textNode = document.createTextNode(code);
-        var nodes = style.element.childNodes;
-        if (nodes[index]) style.element.removeChild(nodes[index]);
-        if (nodes.length) style.element.insertBefore(textNode, nodes[index]);else style.element.appendChild(textNode);
-      }
-    }
-  };
-}
 /* style inject SSR */
 
-var RecycleList = __vue_normalize__$1(__vue_template__$1, __vue_inject_styles__$1, typeof __vue_script__$1 === 'undefined' ? {} : __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, typeof __vue_create_injector__$1 !== 'undefined' ? __vue_create_injector__$1 : function () {}, typeof __vue_create_injector_ssr__ !== 'undefined' ? __vue_create_injector_ssr__ : function () {});
+var RecycleList = normalizeComponent_1({ render: __vue_render__$1, staticRenderFns: __vue_staticRenderFns__$1 }, __vue_inject_styles__$1, __vue_script__$1, __vue_scope_id__$1, __vue_is_functional_template__$1, __vue_module_identifier__$1, browser, undefined);
 
 function registerComponents(Vue, prefix) {
   Vue.component(prefix + 'virtual-scroller', VirtualScroller);
